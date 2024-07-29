@@ -5,8 +5,7 @@ require 'readline'
 
 module Kaitai
   class ConsoleANSI
-    attr_reader :cols
-    attr_reader :rows
+    attr_reader :cols, :rows
 
     def initialize
       load_term_size
@@ -43,31 +42,21 @@ module Kaitai
 
     COLORS = {
       black: 0,
-      gray: 7,
-      gray0: 232,
-      gray1: 233,
-      gray2: 234,
-      gray3: 235,
-      gray4: 236,
-      gray5: 237,
-      gray6: 238,
-      gray7: 239,
-      gray8: 240,
-      gray9: 241,
-      gray10: 242,
-      gray11: 243,
-      gray12: 244,
-      gray13: 245,
-      gray14: 246,
-      gray15: 247,
-      gray16: 248,
-      gray17: 249,
-      gray18: 250,
-      gray19: 251,
-      gray20: 252,
-      gray21: 253,
-      gray22: 254,
-      gray23: 255
+      red: 1,
+      green: 2,
+      yellow: 3,
+      blue: 4,
+      magenta: 5,
+      cyan: 6,
+      white: 7,
+      gray: 8,
+      bright_red: 9,
+      bright_green: 10,
+      bright_yellow: 11,
+      bright_blue: 12,
+      bright_magenta: 13,
+      bright_cyan: 14,
+      bright_white: 15
     }.freeze
 
     def fg_color=(col)
@@ -98,21 +87,19 @@ module Kaitai
       input = $stdin.getc.chr
       if input == "\e"
         begin
-          input << $stdin.read_nonblock(3)
-        rescue StandardError
-          nil
-        end
-        begin
-          input << $stdin.read_nonblock(2)
-        rescue StandardError
-          nil
+          # may return less than 3 bytes because it can only read as many bytes as are
+          # currently available
+          up_to_3bytes = $stdin.read_nonblock(3)
+          input << up_to_3bytes
+        rescue IO::WaitReadable
+          # not an ANSI sequence - the user probably just pressed the Esc key
         end
       end
-    ensure
+
       $stdin.echo = true
       $stdin.cooked!
 
-      return input
+      input
     end
 
     def read_char_mapped

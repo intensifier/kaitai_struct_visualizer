@@ -6,11 +6,12 @@ require 'optparse'
 # Some additional magic to make it work right after repo checkout,
 # without installation to proper Ruby library dirs
 
-full_bin_path = File.realpath($PROGRAM_NAME)
-dist_path = File.expand_path(File.dirname(full_bin_path) + '/..')
-
-$LOAD_PATH << "#{dist_path}/lib"
-$LOAD_PATH << "#{dist_path}/../runtime/ruby/lib"
+# See `bin/ksdump` for more comments
+script_dir = __dir__
+unless script_dir.nil? || script_dir == '.'
+  $LOAD_PATH << File.expand_path('../lib', script_dir)
+  $LOAD_PATH << File.expand_path('../../runtime/ruby/lib', script_dir)
+end
 
 require 'kaitai/struct/visualizer'
 
@@ -34,12 +35,14 @@ parser = OptionParser.new do |opts|
     require v
   end
 
-  opts.on('--version', 'show versions of ksv and ksc') do |_v|
+  opts.on('--version', 'show versions of ksv, ksc and kaitai-struct (Kaitai Struct runtime library for Ruby)') do |_v|
     puts "kaitai-struct-visualizer #{Kaitai::Struct::Visualizer::VERSION}"
     if system('kaitai-struct-compiler', '--version').nil?
       $stderr.puts 'ksv: unable to find and run kaitai-struct-compiler in your PATH'
       exit 1
     end
+    require 'kaitai/struct/struct'
+    puts "kaitai-struct #{Kaitai::Struct::VERSION} (Kaitai Struct runtime library for Ruby)"
     exit 0
   end
 end

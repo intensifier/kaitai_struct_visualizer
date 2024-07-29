@@ -5,8 +5,7 @@ require 'readline'
 
 module Kaitai
   class ConsoleWindows
-    attr_reader :cols
-    attr_reader :rows
+    attr_reader :cols, :rows
 
     kernel32 = Fiddle.dlopen('kernel32')
 
@@ -100,19 +99,19 @@ module Kaitai
       black: 0,
       blue: 1,
       green: 2,
-      aqua: 3,
+      cyan: 3,
       red: 4,
-      purple: 5,
+      magenta: 5,
       yellow: 6,
       white: 7,
       gray: 8,
-      light_blue: 9,
-      light_green: 0xa,
-      light_aqua: 0xb,
-      light_red: 0xc,
-      light_purple: 0xd,
-      light_yellow: 0xe,
-      bright_white: 0xf
+      bright_blue: 9,
+      bright_green: 10,
+      bright_cyan: 11,
+      bright_red: 12,
+      bright_magenta: 13,
+      bright_yellow: 14,
+      bright_white: 15
     }.freeze
 
     def fg_color=(col)
@@ -164,24 +163,24 @@ module Kaitai
       "\r" => :enter,
 
       # Regular AT keyboard arrows
-      E0_ESCAPE + 'H' => :up_arrow,
-      E0_ESCAPE + 'P' => :down_arrow,
-      E0_ESCAPE + 'K' => :left_arrow,
-      E0_ESCAPE + 'M' => :right_arrow,
-      E0_ESCAPE + 'I' => :pg_up,
-      E0_ESCAPE + 'Q' => :pg_dn,
-      E0_ESCAPE + 'G' => :home,
-      E0_ESCAPE + 'O' => :end,
+      "#{E0_ESCAPE}H" => :up_arrow,
+      "#{E0_ESCAPE}P" => :down_arrow,
+      "#{E0_ESCAPE}K" => :left_arrow,
+      "#{E0_ESCAPE}M" => :right_arrow,
+      "#{E0_ESCAPE}I" => :pg_up,
+      "#{E0_ESCAPE}Q" => :pg_dn,
+      "#{E0_ESCAPE}G" => :home,
+      "#{E0_ESCAPE}O" => :end,
 
       # Keypad
-      ZERO_ESCAPE + 'H' => :up_arrow,
-      ZERO_ESCAPE + 'P' => :down_arrow,
-      ZERO_ESCAPE + 'K' => :left_arrow,
-      ZERO_ESCAPE + 'M' => :right_arrow,
-      ZERO_ESCAPE + 'I' => :pg_up,
-      ZERO_ESCAPE + 'Q' => :pg_dn,
-      ZERO_ESCAPE + 'G' => :home,
-      ZERO_ESCAPE + 'O' => :end
+      "#{ZERO_ESCAPE}H" => :up_arrow,
+      "#{ZERO_ESCAPE}P" => :down_arrow,
+      "#{ZERO_ESCAPE}K" => :left_arrow,
+      "#{ZERO_ESCAPE}M" => :right_arrow,
+      "#{ZERO_ESCAPE}I" => :pg_up,
+      "#{ZERO_ESCAPE}Q" => :pg_dn,
+      "#{ZERO_ESCAPE}G" => :home,
+      "#{ZERO_ESCAPE}O" => :end
     }.freeze
 
     def message_box_exception(e)

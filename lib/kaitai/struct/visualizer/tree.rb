@@ -5,6 +5,7 @@ require 'benchmark'
 require 'kaitai/struct/visualizer/version'
 require 'kaitai/struct/visualizer/node'
 require 'kaitai/struct/visualizer/hex_viewer'
+require 'kaitai/struct/visualizer/ks_error_matcher'
 
 module Kaitai::Struct::Visualizer
   class Tree
@@ -54,11 +55,9 @@ module Kaitai::Struct::Visualizer
           unless @hv_hidden
             hv_update_io
 
-            unless @cur_node.pos1.nil?
-              if (@hv.addr < @cur_node.pos1) || (@hv.addr >= @cur_node.pos2)
-                @hv.addr = @cur_node.pos1
-                @hv.ensure_visible
-              end
+            if !@cur_node.pos1.nil? && ((@hv.addr < @cur_node.pos1) || (@hv.addr >= @cur_node.pos2))
+              @hv.addr = @cur_node.pos1
+              @hv.ensure_visible
             end
 
             @hv.redraw
@@ -76,7 +75,7 @@ module Kaitai::Struct::Visualizer
           process_keypress
         rescue EOFError => e
           @ui.message_box_exception(e)
-        rescue Kaitai::Struct::Stream::UnexpectedDataError => e
+        rescue Kaitai::Struct::Visualizer::KSErrorMatcher => e
           @ui.message_box_exception(e)
         end
 
@@ -173,12 +172,12 @@ module Kaitai::Struct::Visualizer
       if @ln == @cur_line
         # Seeking cur_node by cur_line
         @cur_node = n
-        @ui.bg_color = :gray
+        @ui.bg_color = :white
         @ui.fg_color = :black
       elsif @cur_node == n
         # Seeking cur_line by cur_node
         @cur_line = @ln
-        @ui.bg_color = :gray
+        @ui.bg_color = :white
         @ui.fg_color = :black
       end
 
@@ -232,32 +231,6 @@ module Kaitai::Struct::Visualizer
       else
         @hv.shift_x
       end
-    end
-
-    def self.explore_object(obj, level)
-      root = Node.new(obj, level)
-      if obj.is_a?(Integer) || obj.is_a?(String)
-        # do nothing else
-      elsif obj.is_a?(Array)
-        root = Node.new(obj, level)
-        obj.each_with_index do |el, i|
-          n = explore_object(el, level + 1)
-          n.id = i
-          root.add(n)
-        end
-      else
-        root = Node.new(obj, level)
-        obj.instance_variables.each do |k|
-          k = k.to_s
-          next if k =~ /^@_/
-
-          el = obj.instance_eval(k)
-          n = explore_object(el, level + 1)
-          n.id = k
-          root.add(n)
-        end
-      end
-      root
     end
   end
 end

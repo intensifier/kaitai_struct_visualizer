@@ -1,7 +1,13 @@
-# RuboCop Default Config: https://github.com/rubocop-hq/rubocop/blob/master/config/default.yml
+# RuboCop Default Config: https://github.com/rubocop/rubocop/blob/master/config/default.yml
+
+require:
+  - rubocop-rspec
 
 AllCops:
-  NewCops: disable
+  NewCops: enable
+  TargetRubyVersion: 2.4
+  Exclude:
+    - spec/compiled/*.rb
 
 Style/ClassAndModuleChildren:
   Enabled: false
@@ -15,11 +21,17 @@ Style/FormatStringToken:
 Style/MultipleComparison:
   Enabled: false
 
+Style/StderrPuts:
+  Enabled: false
+
 Style/TernaryParentheses:
   Enabled: false
 
 Layout/LineLength:
   Enabled: false
+
+Layout/EndOfLine:
+  EnforcedStyle: lf
 
 Naming/MethodParameterName:
   Enabled: false

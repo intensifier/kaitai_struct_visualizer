@@ -6,14 +6,8 @@ require 'kaitai/struct/visualizer/version'
 
 module Kaitai::Struct::Visualizer
   class Node
-    attr_accessor :id
-    attr_reader :value
-    attr_reader :level
-    attr_reader :pos1
-    attr_reader :pos2
-    attr_reader :children
-    attr_accessor :parent
-    attr_accessor :type
+    attr_accessor :id, :parent, :type
+    attr_reader :value, :level, :pos1, :pos2, :children
 
     def initialize(tree, value, level, value_method = nil, pos1 = nil, pos2 = nil)
       @tree = tree
@@ -114,11 +108,7 @@ module Kaitai::Struct::Visualizer
             raise "Invalid str_mode: #{@str_mode.inspect}"
           end
 
-          s ||= ''
-          if s.length > max_len
-            s = s[0, max_len - 1] || ''
-            s += '…'
-          end
+          s = clamp_string(s, max_len)
           print s
         elsif (@value == true) || (@value == false)
           print " = #{@value}"
@@ -126,10 +116,28 @@ module Kaitai::Struct::Visualizer
           print ' = null'
         elsif @value.is_a?(Array)
           printf ' (%d = 0x%x entries)', @value.size, @value.size
+        elsif @value.public_methods(false).include?(:inspect)
+          s = @value.inspect
+          pos += 3
+          max_len = @tree.tree_width - pos
+          if s.is_a?(String)
+            print " = #{clamp_string(s, max_len)}"
+          else
+            print " = #{clamp_string(s.class.to_s, max_len)}"
+          end
         end
       end
 
       puts
+    end
+
+    def clamp_string(s, max_len)
+      s ||= ''
+      if s.length > max_len
+        s = s[0, max_len - 1] || ''
+        s += '…'
+      end
+      s
     end
 
     def first_n_bytes_dump(s, n)
@@ -167,7 +175,16 @@ module Kaitai::Struct::Visualizer
     def explore
       return if @explored
 
-      @value = @parent.value.send(@value_method) if @value.nil?
+      if @value.nil?
+        @value = @parent.value.send(@value_method)
+        clean_id = @id[0] == '@' ? @id[1..-1] : @id
+        debug_el = @parent.value._debug[clean_id]
+        # raise "Unable to get debugging aid for: #{@parent.value._debug.inspect} using ID '#{clean_id}'" unless debug_el
+        if debug_el
+          @pos1 = debug_el[:start]
+          @pos2 = debug_el[:end]
+        end
+      end
 
       @explored = true
 
@@ -230,16 +247,10 @@ module Kaitai::Struct::Visualizer
         attrs = Set.new(@value.class::SEQ_FIELDS)
 
         # Gather instances
-        common_meths = Set.new
-        @value.class.ancestors.each do |cl|
-          next if cl == @value.class
-
-          common_meths.merge(cl.instance_methods)
-        end
-        inst_meths = Set.new(@value.public_methods) - common_meths
-        inst_meths.each do |meth|
+        prop_meths = @value.public_methods(false)
+        prop_meths.each do |meth|
           k = meth.to_s
-          next if k =~ /^_/ || attrs.include?(k)
+          next if k =~ /^_/ || attrs.include?(k) || meth == :inspect
 
           n = Node.new(@tree, nil, level + 1, meth)
           n.id = k
